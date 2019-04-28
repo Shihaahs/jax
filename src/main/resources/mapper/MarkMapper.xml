@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hj.jax.core.dal.dao.MarkDao">
+
+        <!-- 通用查询映射结果 -->
+        <resultMap id="BaseResultMap" type="com.hj.jax.core.dal.domain.Mark">
+                    <id column="mark_id" property="markId"/>
+                    <result column="mark_user_id" property="markUserId"/>
+                    <result column="mark_rated_user_id" property="markRatedUserId"/>
+                    <result column="mark_sorce" property="markSorce"/>
+                    <result column="mark_course_id" property="markCourseId"/>
+                    <result column="is_delete" property="isDelete"/>
+                    <result column="gmt_create" property="gmtCreate"/>
+                    <result column="gmt_modified" property="gmtModified"/>
+        </resultMap>
+        <!-- 通用查询结果列 -->
+        <sql id="Base_Column_List">
+       mark_id,mark_user_id,mark_rated_user_id,mark_sorce,mark_course_id,is_delete,gmt_create,gmt_modified
+        </sql>
+</mapper>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.hj.jax.core.dal.dao.MarkEngineDao">
+
+        <!-- 通用查询映射结果 -->
+        <resultMap id="BaseResultMap" type="com.hj.jax.core.dal.domain.MarkEngine">
+                    <id column="mark_engine_id" property="markEngineId"/>
+                    <result column="student_weight" property="studentWeight"/>
+                    <result column="teacher_weight" property="teacherWeight"/>
+                    <result column="expert_weight" property="expertWeight"/>
+                    <result column="is_delete" property="isDelete"/>
+                    <result column="gmt_create" property="gmtCreate"/>
+                    <result column="gmt_modified" property="gmtModified"/>
+        </resultMap>
+        <!-- 通用查询结果列 -->
+        <sql id="Base_Column_List">
+       mark_engine_id,student_weight,teacher_weight,expert_weight,is_delete,gmt_create,gmt_modified
+        </sql>
+</mapper>
