@@ -21,7 +21,7 @@ import java.lang.reflect.Method;
 @Aspect
 public class LoggerAspect {
 
-    private final String POINT_CUT = "execution(public * com.sxx.sivir.web.controller.*.*(..))";
+    private final String POINT_CUT = "execution(public * com.hj.jax.web.controller.*.*(..))";
 
     @Pointcut(POINT_CUT)
     public void pointCut() {

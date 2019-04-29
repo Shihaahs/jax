@@ -6,4 +6,7 @@ import com.hj.jax.core.common.base.BaseManager;
 
 public interface MarkEngineManager extends BaseManager<MarkEngine> {
 
+
+    MarkEngine getMarkEngine();
+
 }

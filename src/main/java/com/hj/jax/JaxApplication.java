@@ -12,7 +12,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @EnableTransactionManagement
 @ComponentScan(basePackages = { "com.hj.jax.core.dal", "com.hj.jax.core.service","com.hj.jax.core.common","com.hj.jax.web"})
-@MapperScan(basePackages = {"com.sxx.sivir.core.dal.dao"})
+@MapperScan(basePackages = {"com.hj.jax.core.dal.dao"})
 @EnableSwagger2Doc
 @SpringBootApplication(exclude = {HibernateJpaAutoConfiguration.class },scanBasePackages = "com.hj.jax")
 

@@ -9,4 +9,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class MarkEngineManagerImpl extends BaseManagerImpl<MarkEngineDao, MarkEngine> implements MarkEngineManager{
 
+    private MarkEngineDao engineDao;
+
+    @Override
+    public MarkEngine getMarkEngine() {
+        return engineDao.selectById(1L);
+    }
 }

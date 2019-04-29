@@ -32,3 +32,4 @@ target/
 .vscode/
 
 **/H-ui.admin/**
+**/X-admin/**
