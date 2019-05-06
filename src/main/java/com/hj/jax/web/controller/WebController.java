@@ -5,6 +5,7 @@ import com.hj.jax.core.common.enums.GlobalErrorCode;
 import com.hj.jax.core.common.page.PageResult;
 import com.hj.jax.core.common.request.PageRequestDTO;
 import com.hj.jax.core.common.util.DateUtil;
+import com.hj.jax.core.common.vo.MarkVO;
 import com.hj.jax.core.common.vo.TeacherMarkVO;
 import com.hj.jax.core.dal.domain.Mark;
 import com.hj.jax.core.dal.domain.MarkEngine;
@@ -59,7 +60,7 @@ public class WebController {
 
 
     @RequestMapping(value = ADMIN_GET_ALL_MARK, method = RequestMethod.POST)
-    public APIResult<PageResult<Mark>> getAllMark(@RequestBody PageRequestDTO pageRequestDTO) {
+    public APIResult<PageResult<MarkVO>> getAllMark(@RequestBody PageRequestDTO pageRequestDTO) {
         return APIResult.ok(webService.getAllMark(pageRequestDTO));
     }
 

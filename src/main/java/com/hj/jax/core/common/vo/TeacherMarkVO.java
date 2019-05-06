@@ -10,21 +10,28 @@ public class TeacherMarkVO {
 
     private String teacherName;
 
+    private String courseName;
+
+    private Integer stuMarkCount;
+
+    private Integer teaMarkCount;
+
+    private Integer expMarkCount;
     /**
      * 学生平均分
      */
-    private String stuArrangeScore;
+    private String stuMarkAverage;
     /**
      * 教师平均分
      */
-    private String teaArrangeScore;
+    private String teaMarkAverage;
     /**
      * 专家平均分
      */
-    private String expArrangeScore;
+    private String expMarkAverage;
     /**
      * 最终得分
      */
-    private String finalScore;
+    private String finalAverage;
 
 }

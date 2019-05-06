@@ -1177,7 +1177,7 @@ table th{text-align:left; font-weight:400}
 .table-border th,.table-border td{border-bottom:1px solid #ddd}
 
 /*th带背景*/
-.table-bg thead th{background-color:#F5FAFE}
+.table-bg thead th{background-color:#009688}
 /*带外边框*/
 .table-bordered{border:1px solid #ddd;border-collapse:separate;*border-collapse:collapse;border-left:0}
 .table-bordered th,.table-bordered td{border-left:1px solid #ddd}
@@ -1193,7 +1193,7 @@ table th{text-align:left; font-weight:400}
 .table-hover tbody tr:hover td,
 .table-hover tbody tr:hover th{background-color: #f5f5f5}
 /*鼠标选择整行样式*/
-.table tbody tr.selected td{background-color:#F3F3F3}
+.table tbody tr.selected td{background-color:#effeea}
 /*定义颜色*/
 /*悬停在行*/
 .table tbody tr.active,
@@ -1230,7 +1230,7 @@ table.dataTable thead .sorting_asc, table.dataTable thead .sorting_desc, table.d
 table.dataTable thead .sorting{background-image:url(../images/dataTable/sort_both.png)}
 table.dataTable thead .sorting_asc {background-image:url(../images/dataTable/sort_asc.png)}
 table.dataTable thead .sorting_desc {background-image:url(../images/dataTable/sort_desc.png)}
-.dataTable td.sorting_1 {background-color: #effeea}
+.dataTable td.sorting_1 {background-color: white}
 .dataTables_wrapper .dataTables_length {float: left;padding-bottom:20px}
 .dataTables_wrapper .dataTables_length .select{ width:50px}
 .dataTables_wrapper .dataTables_filter {float: right;text-align: right}

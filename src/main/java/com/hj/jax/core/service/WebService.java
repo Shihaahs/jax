@@ -3,6 +3,7 @@ package com.hj.jax.core.service;
 
 import com.hj.jax.core.common.page.PageResult;
 import com.hj.jax.core.common.request.PageRequestDTO;
+import com.hj.jax.core.common.vo.MarkVO;
 import com.hj.jax.core.common.vo.TeacherMarkVO;
 import com.hj.jax.core.dal.domain.Mark;
 import com.hj.jax.core.dal.domain.MarkEngine;
@@ -27,7 +28,7 @@ public interface WebService {
     /**
      * 管理员 - 评分显示
      */
-    PageResult<Mark> getAllMark(PageRequestDTO pageRequestDTO);
+    PageResult<MarkVO> getAllMark(PageRequestDTO pageRequestDTO);
 
     //Integer addAdminMark(Mark mark);
 

@@ -3,17 +3,15 @@ package com.hj.jax.core.service.impl;
 import com.baomidou.mybatisplus.mapper.EntityWrapper;
 import com.baomidou.mybatisplus.plugins.Page;
 import com.google.common.collect.Lists;
+import com.hj.jax.core.common.enums.MarkTypeEnum;
 import com.hj.jax.core.common.enums.UserPermissionEnum;
 import com.hj.jax.core.common.page.PageResult;
 import com.hj.jax.core.common.request.PageRequestDTO;
 import com.hj.jax.core.common.util.DateUtil;
+import com.hj.jax.core.common.vo.MarkVO;
 import com.hj.jax.core.common.vo.TeacherMarkVO;
-import com.hj.jax.core.dal.domain.Mark;
-import com.hj.jax.core.dal.domain.MarkEngine;
-import com.hj.jax.core.dal.domain.User;
-import com.hj.jax.core.dal.manager.MarkEngineManager;
-import com.hj.jax.core.dal.manager.MarkManager;
-import com.hj.jax.core.dal.manager.UserManager;
+import com.hj.jax.core.dal.domain.*;
+import com.hj.jax.core.dal.manager.*;
 import com.hj.jax.core.service.WebService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
@@ -25,6 +23,7 @@ import org.springframework.util.Assert;
 
 import java.text.DecimalFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.hj.jax.core.common.enums.MarkTypeEnum.*;
 import static com.hj.jax.core.common.page.PageQuery.conditionAdapter;
@@ -37,6 +36,10 @@ public class WebServiceImpl implements WebService {
     private static final Integer COLUMN_WIDTH = 25 * 256;
     private static final DecimalFormat decimalFormat = new DecimalFormat("0.00"); //平均分保留两位小数点
 
+    @Autowired
+    private CourseManager courseManager;
+    @Autowired
+    private UserCourseRefManager courseRefManager;
     @Autowired
     private UserManager userManager;
     @Autowired
@@ -97,16 +100,38 @@ public class WebServiceImpl implements WebService {
 
 
     @Override
-    public PageResult<Mark> getAllMark(PageRequestDTO pageRequestDTO) {
+    public PageResult<MarkVO> getAllMark(PageRequestDTO pageRequestDTO) {
         //分页条件查询
         Page<Mark> markPage = markManager.selectPage(
                 initPage(pageRequestDTO),
                 conditionAdapter(pageRequestDTO));
 
+        List<Long> markUserIds = Lists.transform(markPage.getRecords(), Mark::getMarkUserId);
+        List<Long> markRatedUserIds = Lists.transform(markPage.getRecords(), Mark::getMarkRatedUserId);
+        List<Long> courseIds = Lists.transform(markPage.getRecords(), Mark::getMarkCourseId);
+
+        Map<Long, User> markUserMap = userManager.selectUserMapByUserIds(markUserIds);
+        Map<Long, User> markRatedUserMap = userManager.selectUserMapByUserIds(markRatedUserIds);
+        Map<Long, Course> courseMap = courseManager.selectCourseMapByIds(courseIds);
+
+        List<MarkVO> markVOList = new ArrayList<>();
+
+        markPage.getRecords().forEach(mark -> {
+            MarkVO markVO = new MarkVO();
+            Long markId = mark.getMarkId();
+            markVO.setMarkId(markId);
+            markVO.setMarkUserName(markUserMap.get(mark.getMarkUserId()).getUserName());
+            markVO.setMarkRatedUserName(markRatedUserMap.get(mark.getMarkRatedUserId()).getUserName());
+            markVO.setMarkCourseName(courseMap.get(mark.getMarkCourseId()).getCourseName());
+            markVO.setMarkType(MarkTypeEnum.getDesc(mark.getMarkType()));
+            markVO.setMarkScore(mark.getMarkScore());
+            markVOList.add(markVO);
+        });
+
         return new PageResult<>(pageRequestDTO.getPageSize(),
                 pageRequestDTO.getPageCurrent(),
                 (int) markPage.getTotal(),
-                markPage.getRecords());
+                markVOList);
     }
 
     @Override
@@ -132,6 +157,7 @@ public class WebServiceImpl implements WebService {
             log.error("修改评分引擎失败 -> 专家权重为空");
             return 0;
         }
+        engine.setMarkEngineId(1L);
         return engineManager.updateById(engine);
     }
 
@@ -148,27 +174,40 @@ public class WebServiceImpl implements WebService {
                 .eq("permission", UserPermissionEnum.TEACHER.getCode())), User::getUserId);
 
         userManager.getUserByUserIds(teacherIds).forEach(teacher -> {
-            TeacherMarkVO teacherMarkVO = new TeacherMarkVO();
-            teacherMarkVO.setTeacherId(teacher.getUserId());
-            teacherMarkVO.setTeacherName(teacher.getUserName());
 
-            //获取评分分
-            List<Integer> stuScore = markManager.getMarkByTeacherId(teacher.getUserId(), STUDENT_MARK.getCode());
-            List<Integer> teaScore = markManager.getMarkByTeacherId(teacher.getUserId(), TEACHER_MARK.getCode());
-            List<Integer> expScore = markManager.getMarkByTeacherId(teacher.getUserId(), EXPERT_MARK.getCode());
+            //该老师注册绑定的课程
+            List<Long> courseIds = courseRefManager.selectList(
+                    new EntityWrapper<UserCourseRef>()
+                            .eq("user_id", teacher.getUserId()))
+                    .stream().map(UserCourseRef::getCourseId).collect(Collectors.toList());
 
-            teacherMarkVO.setStuArrangeScore(calculateArrangeScore((stuScore)));
-            teacherMarkVO.setTeaArrangeScore(calculateArrangeScore((teaScore)));
-            teacherMarkVO.setExpArrangeScore(calculateArrangeScore((expScore)));
+            courseIds.forEach( courseId -> {
+                TeacherMarkVO teacherMarkVO = new TeacherMarkVO();
+                teacherMarkVO.setTeacherId(teacher.getUserId());
+                teacherMarkVO.setTeacherName(teacher.getUserName());
 
-            teacherMarkVO.setFinalScore(calculateFinalScore(
-                    teacherMarkVO.getStuArrangeScore(),
-                    teacherMarkVO.getTeaArrangeScore(),
-                    teacherMarkVO.getExpArrangeScore()));
+                Course course = courseManager.selectById(courseId);
+                teacherMarkVO.setCourseName(course.getCourseName());
+                //获取评分分
+                List<Integer> stuScore = markManager.getMarkByTeacherId(teacher.getUserId(),courseId, STUDENT_MARK.getCode());
+                List<Integer> teaScore = markManager.getMarkByTeacherId(teacher.getUserId(),courseId, TEACHER_MARK.getCode());
+                List<Integer> expScore = markManager.getMarkByTeacherId(teacher.getUserId(),courseId, EXPERT_MARK.getCode());
 
-            teacherMarkVOList.add(teacherMarkVO);
+                teacherMarkVO.setStuMarkCount(stuScore.size());
+                teacherMarkVO.setStuMarkAverage(calculateArrangeScore((stuScore)));
+                teacherMarkVO.setTeaMarkCount(stuScore.size());
+                teacherMarkVO.setTeaMarkAverage(calculateArrangeScore((teaScore)));
+                teacherMarkVO.setExpMarkCount(stuScore.size());
+                teacherMarkVO.setExpMarkAverage(calculateArrangeScore((expScore)));
+
+                teacherMarkVO.setFinalAverage(calculateFinalScore(
+                        teacherMarkVO.getStuMarkAverage(),
+                        teacherMarkVO.getTeaMarkAverage(),
+                        teacherMarkVO.getExpMarkAverage()));
+
+                teacherMarkVOList.add(teacherMarkVO);
+            });
         });
-
 
         return new PageResult<>(pageRequestDTO.getPageSize(),
                 pageRequestDTO.getPageCurrent(),
@@ -233,7 +272,7 @@ public class WebServiceImpl implements WebService {
 
         //创建一个工作表
         XSSFWorkbook workbook = new XSSFWorkbook();
-        String name = DateUtil.parseToString(new Date(), "yyyy-MM-dd HH:mm:ss");
+        String name = DateUtil.parseToString(new Date(), "yyyy-MM-dd HH-mm-ss");
         XSSFSheet sheet = workbook.createSheet(name);
         //添加表头
         XSSFRow xssfRow = sheet.createRow(0);
@@ -264,22 +303,47 @@ public class WebServiceImpl implements WebService {
         column++;
 
         headCell = xssfRow.createCell(column);
-        headCell.setCellValue("学生评分平均分");
+        headCell.setCellValue("评分课程");
         headCell.setCellStyle(headCellStyle);
         sheet.setColumnWidth(column, COLUMN_WIDTH);
         column++;
 
         headCell = xssfRow.createCell(column);
-        headCell.setCellValue("教师评分平均分");
+        headCell.setCellValue("学生评分人数");
         headCell.setCellStyle(headCellStyle);
         sheet.setColumnWidth(column, COLUMN_WIDTH);
         column++;
 
         headCell = xssfRow.createCell(column);
-        headCell.setCellValue("专家评分平均分");
+        headCell.setCellValue("学生评分均分");
         headCell.setCellStyle(headCellStyle);
         sheet.setColumnWidth(column, COLUMN_WIDTH);
         column++;
+
+        headCell = xssfRow.createCell(column);
+        headCell.setCellValue("教师评分人数");
+        headCell.setCellStyle(headCellStyle);
+        sheet.setColumnWidth(column, COLUMN_WIDTH);
+        column++;
+
+        headCell = xssfRow.createCell(column);
+        headCell.setCellValue("教师评分均分");
+        headCell.setCellStyle(headCellStyle);
+        sheet.setColumnWidth(column, COLUMN_WIDTH);
+        column++;
+
+        headCell = xssfRow.createCell(column);
+        headCell.setCellValue("专家评分人数");
+        headCell.setCellStyle(headCellStyle);
+        sheet.setColumnWidth(column, COLUMN_WIDTH);
+        column++;
+
+        headCell = xssfRow.createCell(column);
+        headCell.setCellValue("专家评分均分");
+        headCell.setCellStyle(headCellStyle);
+        sheet.setColumnWidth(column, COLUMN_WIDTH);
+        column++;
+
         headCell = xssfRow.createCell(column);
         headCell.setCellValue("最终评分");
         headCell.setCellStyle(headCellStyle);
@@ -298,22 +362,42 @@ public class WebServiceImpl implements WebService {
             column++;
 
             cell = xssfRow.createCell(column);
-            cell.setCellValue(teacherMarkVO.getStuArrangeScore());
+            cell.setCellValue(teacherMarkVO.getCourseName());
             cell.setCellStyle(cellStyle);
             column++;
 
             cell = xssfRow.createCell(column);
-            cell.setCellValue(teacherMarkVO.getTeaArrangeScore());
+            cell.setCellValue(teacherMarkVO.getStuMarkAverage());
             cell.setCellStyle(cellStyle);
             column++;
 
             cell = xssfRow.createCell(column);
-            cell.setCellValue(teacherMarkVO.getExpArrangeScore());
+            cell.setCellValue(teacherMarkVO.getStuMarkCount());
             cell.setCellStyle(cellStyle);
             column++;
 
             cell = xssfRow.createCell(column);
-            cell.setCellValue(teacherMarkVO.getFinalScore());
+            cell.setCellValue(teacherMarkVO.getTeaMarkCount());
+            cell.setCellStyle(cellStyle);
+            column++;
+
+            cell = xssfRow.createCell(column);
+            cell.setCellValue(teacherMarkVO.getTeaMarkAverage());
+            cell.setCellStyle(cellStyle);
+            column++;
+
+            cell = xssfRow.createCell(column);
+            cell.setCellValue(teacherMarkVO.getExpMarkCount());
+            cell.setCellStyle(cellStyle);
+            column++;
+
+            cell = xssfRow.createCell(column);
+            cell.setCellValue(teacherMarkVO.getExpMarkAverage());
+            cell.setCellStyle(cellStyle);
+            column++;
+
+            cell = xssfRow.createCell(column);
+            cell.setCellValue(teacherMarkVO.getFinalAverage());
             cell.setCellStyle(cellStyle);
 
             row++;

@@ -11,6 +11,7 @@ public interface MarkManager extends BaseManager<Mark> {
     /**
      * <p> 获取相应教师的系列评分 </p>
      * @param teacherId 教师id
+     * @param courseId 该教师注册绑定的课程id
      * @param markType 分数类型
      * @return List<Integer>
      * @author huangji
@@ -18,5 +19,5 @@ public interface MarkManager extends BaseManager<Mark> {
      * @since V1.0.0-SNAPSHOT
      *
      */
-    List<Integer> getMarkByTeacherId(Long teacherId, Integer markType);
+    List<Integer> getMarkByTeacherId(Long teacherId,Long courseId, Integer markType);
 }

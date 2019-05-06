@@ -18,11 +18,13 @@ public class MarkManagerImpl extends BaseManagerImpl<MarkDao, Mark> implements M
     private MarkDao markDao;
 
     @Override
-    public List<Integer> getMarkByTeacherId(Long teacherId, Integer markType) {
+    public List<Integer> getMarkByTeacherId(Long teacherId, Long courseId, Integer markType) {
         List<Mark> markList = markDao.selectList(new EntityWrapper<Mark>()
                 .eq("mark_rated_user_id", teacherId)
+                .eq("mark_course_id", courseId)
                 .eq("mark_type",markType));
 
         return Lists.transform(markList, Mark::getMarkScore);
     }
+
 }

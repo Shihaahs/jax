@@ -48,10 +48,12 @@
                 <th width="80" >评分人</th>
                 <th width="120" >被评分人</th>
                 <th width="80" >评分课程</th>
-                <th width="200" >评分</th>
+                <th width="80" >评分类型</th>
+                <th width="80" >评分</th>
                 <th width="30">操作</th>
             </tr>
             </thead>
+            <tbody class="text-c"></tbody>
         </table>
     </div>
 </div>
@@ -86,7 +88,7 @@
             ],
             "keys": true,
             "bProcessing": false, //是否显示加载
-            "sAjaxSource": '../admin/getAllUser.json', //请求资源路径,即是"sAjaxSource"
+            "sAjaxSource": '../admin/getAllMark.json', //请求资源路径,即是"sAjaxSource"
             "serverSide": false, //开启服务器处理模式
             "fnServerData": function (sSource, aoData, fnCallback) {    //fnServerData : 路径 参数 回调函数
                 $.ajax({
@@ -106,27 +108,14 @@
                         return ++index;
                     }
                 },
-                {data: "userName"},
-                {data: "password"},
-                {data: "permission", //状态
+                {data: "markUserName"},
+                {data: "markRatedUserName"},
+                {data: "markCourseName"},
+                {data: "markType"},
+                {data: "markScore"},
+                {data: "markId",       //操作
                     render: function (data, type, full, meta) {
-                        switch (data) {
-                            case 1:
-                                return '学生';
-                            case 2:
-                                return '教师';
-                            case 3:
-                                return '专家';
-                            case 0:
-                                return '超级管理员';
-                        }
-                    }
-                },
-                {data: "gmtModified"},
-                {data: "userId",       //操作
-                    render: function (data, type, full, meta) {
-                        return '<a style="text-decoration:none" class="ml-5" onClick="updateUser(' + data + ')" href="javascript:;" title="编辑"><i class="Hui-iconfont">&#xe6df;</i></a> ' +
-                        '<a title="删除" href="javascript:;" onclick="deleteUser(this,' + data + ')" class="ml-5" style="text-decoration:none"><i class="Hui-iconfont">&#xe6e2;</i></a> ';
+                        return '<a title="删除" href="javascript:;" onclick="deleteMark(this,' + data + ')" class="ml-5" style="text-decoration:none"><i class="Hui-iconfont">&#xe6e2;</i></a> ';
                     }
                 }
             ]
@@ -148,37 +137,24 @@
         });
     }
 
-    function updateUser(id) {
-        layer.open({
-            type: 2,
-            area: ['800px', '500px'],
-            fix: false, //不固定
-            maxmin: true,
-            shade: 0.4,
-            title: "修改用户",
-            content: '../../api/to/admin-user-update?userId=' + id
-        });
-    }
-
-
 
     /*取消订单*/
-    function deleteUser(obj, id) {
-        var user = {
-            "userId": id
+    function deleteMark(obj, id) {
+        var mark = {
+            "markId": id
         };
 
-        layer.confirm('确认要删除该用户吗？', function () {
+        layer.confirm('确认要删除该评分项吗？', function () {
             $.ajax({
                 type: 'POST',
-                url: '../admin/deleteUser.json',
-                data: JSON.stringify(user),
+                url: '../admin/deleteMark.json',
+                data: JSON.stringify(mark),
                 dataType: 'json',
                 contentType: "application/json;charset=utf-8",
                 success: function (data) {
                     $(obj).parents("tr").remove();
                     $("#refresh i").click();
-                    layer.msg('用户已删除!', {icon: 1, time: 1000});
+                    layer.msg('评分项已删除!', {icon: 1, time: 1000});
                 },
                 error: function (data) {
                     console.log(data.msg);

@@ -51,7 +51,7 @@ public class Mark extends BaseModel {
     private Long markCourseId;
 
     /**
-     * 评分分数
+     * 评分类型 {@link com.hj.jax.core.common.enums.MarkTypeEnum}
      */
     @TableField("mark_type")
     private Integer markType;

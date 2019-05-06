@@ -3009,7 +3009,7 @@ table th {
 }
 
 .table-bg thead th {
-    background-color: #effeea
+    background-color: #009688
 }
 
 .table-bordered {
@@ -3104,7 +3104,7 @@ table.dataTable thead .sorting_desc {
 }
 
 .dataTable td.sorting_1 {
-    background-color: #f5fafe
+    background-color: white;
 }
 
 .dataTables_wrapper .dataTables_length {
@@ -3156,7 +3156,7 @@ table.dataTable thead .sorting_desc {
 }
 
 .dataTables_wrapper .dataTables_paginate .paginate_button:hover, .dataTables_wrapper .dataTables_paginate .paginate_button.current, .dataTables_wrapper .dataTables_paginate .paginate_button.current:hover {
-    background: #5a98de;
+    background: #009688;
     color: #fff
 }
 

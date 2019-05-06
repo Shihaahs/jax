@@ -21,7 +21,7 @@ public enum MarkTypeEnum {
         this.desc = desc;
     }
 
-    public static String getDesc(Long code){
+    public static String getDesc(Integer code){
         return Arrays.stream(values())
                 .filter(e -> e.getCode().equals(code))
                 .map(MarkTypeEnum::getDesc)

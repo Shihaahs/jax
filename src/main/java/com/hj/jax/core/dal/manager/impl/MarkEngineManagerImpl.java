@@ -4,11 +4,13 @@ import com.hj.jax.core.dal.domain.MarkEngine;
 import com.hj.jax.core.dal.dao.MarkEngineDao;
 import com.hj.jax.core.dal.manager.MarkEngineManager;
 import com.hj.jax.core.common.base.BaseManagerImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class MarkEngineManagerImpl extends BaseManagerImpl<MarkEngineDao, MarkEngine> implements MarkEngineManager{
 
+    @Autowired
     private MarkEngineDao engineDao;
 
     @Override

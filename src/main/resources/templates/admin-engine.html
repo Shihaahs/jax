@@ -20,38 +20,50 @@
     <script type="text/javascript" src="/static/lib/DD_belatedPNG_0.0.8a-min.js"></script>
     <script>DD_belatedPNG.fix('*');</script>
     <![endif]-->
-    <title>用户管理</title>
+    <title>评分引擎</title>
 </head>
 <body>
-<nav class="breadcrumb"><i class="Hui-iconfont">&#xe67f;</i> 首页 <span class="c-gray en">&gt;</span> 管理员管理 <span
-        class="c-gray en">&gt;</span> 用户管理 <a id="refresh" class="btn btn-success radius r"
+<nav class="breadcrumb"><i class="Hui-iconfont">&#xe67f;</i> 首页 <span class="c-gray en">&gt;</span> 评分管理 <span
+        class="c-gray en">&gt;</span> 评分引擎 <a id="refresh" class="btn btn-success radius r"
                                               style="line-height:1.6em;margin-top:3px"
                                               href="javascript:location.replace(location.href);" title="刷新"><i
         class="Hui-iconfont">&#xe68f;</i></a></nav>
 <div class="page-container">
-    <div class="cl pd-5 bg-1 bk-gray mt-20">
-		<span class="l">
-			<!--
-			<a class="btn btn-primary radius" data-title="下订单"
-               onclick="addUser(this)" href="javascript:;">
-				<i class="Hui-iconfont">&#xe600;</i> 新增用户
-			</a>
-			-->
+    <div class="cl pd-5 bg-1 bk-gray mt-20" style="text-align: center">
+		<span style="width: inherit; height: inherit; margin: 0 auto">
+            <label style="display: inline-block">学生权重:</label>
+            <input style="width:30px; border: solid 1px #ddd;margin-top: -2px" type="text" id="stuWeight"/>&nbsp;%
+            &nbsp;&nbsp;~&nbsp;&nbsp;&nbsp;
+            <label style="display: inline-block">同行权重:</label>
+            <input  style="width:30px; border: solid 1px #ddd;margin-top: -2px" type="text" id="teaWeight"/>&nbsp;%
+            &nbsp;&nbsp;~&nbsp;&nbsp;&nbsp;
+            <label style="display: inline-block">专家权重:</label>
+            <input style="width:30px; border: solid 1px #ddd;margin-top: -2px" type="text" id="expWeight"/>&nbsp;%
+            &nbsp;&nbsp;&nbsp;
+            <a class="btn btn-primary radius" style="background-color:#FF5722; " data-title="权重修改"
+               onclick="updateEngine(this)" href="javascript:;">
+                <i class="Hui-iconfont">&#xe600;</i> 修改权重
+            </a>
 		</span>
-        <span class="r">共有数据：<strong id="pageCount"></strong> 条</span></div>
+        <span class="r" style="margin-top: 3px">共有数据：<strong id="pageCount"></strong> 条</span></div>
     <div class="mt-20">
         <table class="table table-border table-bordered table-bg table-hover table-sort table-responsive"
                id="table">
             <thead>
             <tr class="text-c">
                 <th width="30">序号</th>
-                <th width="80" >用户名称</th>
-                <th width="120" >用户密码</th>
-                <th width="80" >用户角色</th>
-                <th width="200" >修改时间</th>
-                <th width="30">操作</th>
+                <th width="80">教师名称</th>
+                <th width="80">所教课程</th>
+                <th width="50">学生评分人数</th>
+                <th width="80">学生评分均分</th>
+                <th width="50">同行评分人数</th>
+                <th width="80">同行评分均分</th>
+                <th width="50">专家评分人数</th>
+                <th width="80">专家评分均分</th>
+                <th width="80">总评分</th>
             </tr>
             </thead>
+            <tbody class="text-c"></tbody>
         </table>
     </div>
 </div>
@@ -70,10 +82,16 @@
     var table;
     var index = 0;
     //页面加载后自动请求一次
-    $(document).ready(initTable());
+    $(document).ready(
+        initTable(),
+        initEngine(),
+        $("#table_length").append('<a class="btn btn-primary radius" style="background-color:#FF5722;border: none; margin-top: -8px; margin-left: 15px;" data-title="导出评分"\n' +
+            'href="../admin/getMarkReport.json">导出评分</a>')
+    );
 
     //加载table数据
     function initTable() {
+
         var pageRequestDTO = {
             pageSize: 100,
             pageCurrent: 1
@@ -82,11 +100,11 @@
         table = $("#table").DataTable({
             "aaSorting": [[0, "asc"]],//属性'aaSorting':初始化表格的时候，选择以怎样的规则排序 asc - 顺， desc - 逆
             "aoColumnDefs": [
-                {"orderable": false, "aTargets": [2,3]}// 制定列不参与排序 //targets ： 表示具体需要操作的目标列，下标从 0 开始
+                {"orderable": false, "aTargets": [2, 3]}// 制定列不参与排序 //targets ： 表示具体需要操作的目标列，下标从 0 开始
             ],
             "keys": true,
             "bProcessing": false, //是否显示加载
-            "sAjaxSource": '../admin/getAllUser.json', //请求资源路径,即是"sAjaxSource"
+            "sAjaxSource": '../admin/getAllTeacherMark.json', //请求资源路径,即是"sAjaxSource"
             "serverSide": false, //开启服务器处理模式
             "fnServerData": function (sSource, aoData, fnCallback) {    //fnServerData : 路径 参数 回调函数
                 $.ajax({
@@ -102,91 +120,83 @@
                 });
             },
             "columns": [
-                {render: function (data, type, full, meta) {
+                {
+                    render: function (data, type, full, meta) {
                         return ++index;
                     }
                 },
-                {data: "userName"},
-                {data: "password"},
-                {data: "permission", //状态
-                    render: function (data, type, full, meta) {
-                        switch (data) {
-                            case 1:
-                                return '学生';
-                            case 2:
-                                return '教师';
-                            case 3:
-                                return '专家';
-                            case 0:
-                                return '超级管理员';
-                        }
-                    }
-                },
-                {data: "gmtModified"},
-                {data: "userId",       //操作
-                    render: function (data, type, full, meta) {
-                        return '<a style="text-decoration:none" class="ml-5" onClick="updateUser(' + data + ')" href="javascript:;" title="编辑"><i class="Hui-iconfont">&#xe6df;</i></a> ' +
-                        '<a title="删除" href="javascript:;" onclick="deleteUser(this,' + data + ')" class="ml-5" style="text-decoration:none"><i class="Hui-iconfont">&#xe6e2;</i></a> ';
-                    }
-                }
+                {data: "teacherName"},
+                {data: "courseName"},
+                {data: "stuMarkCount"},
+                {data: "stuMarkAverage"},
+                {data: "teaMarkCount"},
+                {data: "teaMarkAverage"},
+                {data: "expMarkCount"},
+                {data: "expMarkAverage"},
+                {data: "finalAverage"}
             ]
         });
 
     }
 
-
-    /* 跳转新增页面 */
-    function addUser() {
-        layer.open({
-            type: 2,
-            area: ['800px', '500px'],
-            fix: false, //不固定
-            maxmin: true,
-            shade: 0.4,
-            title: "新增用户",
-            content: '../../api/to/admin-user-add'
+    //加载评分引擎
+    function initEngine() {
+        $.ajax({
+            'type': 'get', //提交方式
+            "url": "../admin/getMarkEngine.json", //路径
+            "dataType": "json", //数据类型:json
+            "contentType": "application/json;charset=utf-8",
+            "success": function (resp) {
+                console.log(resp);
+                $("#stuWeight").val(resp.data.studentWeight);
+                $("#teaWeight").val(resp.data.teacherWeight);
+                $("#expWeight").val(resp.data.expertWeight);
+            }
         });
+
     }
 
-    function updateUser(id) {
-        layer.open({
-            type: 2,
-            area: ['800px', '500px'],
-            fix: false, //不固定
-            maxmin: true,
-            shade: 0.4,
-            title: "修改用户",
-            content: '../../api/to/admin-user-update?userId=' + id
-        });
-    }
+    function updateEngine() {
+        var stuWeight = $("#stuWeight").val();
+        var teaWeight = $("#teaWeight").val();
+        var expWeight = $("#expWeight").val();
+        var totalWeight = stuWeight * 1 + teaWeight * 1 + expWeight * 1;
+        //权重合法性校验
+        if (totalWeight !== 100) {
+            layer.msg('权重总值不等于100，不合法', {icon: 2, time: 2000});
+            //alert("权重总值不等于100，不合法");
+            initEngine();
+            return;
+        }
 
-
-
-    /*取消订单*/
-    function deleteUser(obj, id) {
-        var user = {
-            "userId": id
+        var engine = {
+            studentWeight: stuWeight,
+            teacherWeight: teaWeight,
+            expertWeight: expWeight
         };
 
-        layer.confirm('确认要删除该用户吗？', function () {
-            $.ajax({
-                type: 'POST',
-                url: '../admin/deleteUser.json',
-                data: JSON.stringify(user),
-                dataType: 'json',
-                contentType: "application/json;charset=utf-8",
-                success: function (data) {
-                    $(obj).parents("tr").remove();
+        $.ajax({
+            type: 'POST',
+            url: '../admin/updateMarkEngine.json',
+            data: JSON.stringify(engine),
+            dataType: 'json',
+            contentType: "application/json;charset=utf-8",
+            success: function (data) {
+                if (data.data === 1) {
+                    layer.msg('权重修改成功!评分已更新！', {icon: 1, time: 1000});
                     $("#refresh i").click();
-                    layer.msg('用户已删除!', {icon: 1, time: 1000});
-                },
-                error: function (data) {
-                    console.log(data.msg);
                 }
-            });
+            },
+            error: function (data) {
+                console.log(data.msg);
+            }
         });
     }
 
+
+    function uploadMarkExcel() {
+            window.location.href = "?pageSize=500";
+    }
 </script>
 </body>
 </html>
