@@ -4,16 +4,15 @@ package com.hj.jax.core.common.constant;
 public class JaxURL {
 
     /**
-     * 公共接口
-     */
-
-    /**
      * 系统接口
      */
-    public static final String SIVIR_LOGIN = "/api/login.json";
-    public static final String SIVIR_LOGOUT = "/api/logout.json";
-    public static final String SIVIR_REGISTER = "/api/register.json";
-    public static final String PUBLIC_FIND_USER = "/api/public/find/user.json";
+    public static final String JAX_LOGIN = "/api/login.json";
+    public static final String JAX_LOGOUT = "/api/logout.json";
+    public static final String JAX_REGISTER = "/api/register.json";
+    public static final String JAX_REGISTER_COURSE = "/api/registerCourse.json";
+    public static final String JAX_REGISTER_TEACHER_COURSE_REF = "/api/registerTeacherCourseRef.json";
+    public static final String JAX_GET_ALL_COURSE = "/api/getAllCourse.json";
+
 
 
     /**

@@ -2,49 +2,37 @@ package com.hj.jax.core.dal.domain;
 
 import com.baomidou.mybatisplus.annotations.TableField;
 import com.baomidou.mybatisplus.annotations.TableId;
+import com.baomidou.mybatisplus.annotations.TableLogic;
 import com.baomidou.mybatisplus.annotations.TableName;
 import com.baomidou.mybatisplus.enums.IdType;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.hj.jax.core.common.base.BaseModel;
-import com.baomidou.mybatisplus.annotations.*;
-
-import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.util.Date;
-
-
-import com.baomidou.mybatisplus.annotations.Version;
-
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import lombok.experimental.Accessors;
+
+import java.util.Date;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("user_course_ref")
-public class UserCourseRef extends BaseModel {
+@TableName("teacher_course_ref")
+public class TeacherCourseRef extends BaseModel {
 
     private static final long serialVersionUID = 1L;
     /**
      * 引用主键，自增长
      */
-    @TableId(value = "user_course_ref_id", type = IdType.AUTO)
-    private Long userCourseRefId;
+    @TableId(value = "teacher_course_ref_id", type = IdType.AUTO)
+    private Long teacherCourseRefId;
     /**
      * 用户id
      */
-    @TableField("user_id")
-    private Long userId;
+    @TableField("teacher_id")
+    private Long teacherId;
     /**
      * 课程id
      */
     @TableField("course_id")
     private Long courseId;
-    /**
-     * 课程老师id
-     */
-    @TableField("course_teacher_id")
-    private Long courseTeacherId;
     /**
      * 逻辑删除，0-存在，1-已被删除
      */

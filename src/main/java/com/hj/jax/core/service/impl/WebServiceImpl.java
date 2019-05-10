@@ -13,6 +13,7 @@ import com.hj.jax.core.common.vo.TeacherMarkVO;
 import com.hj.jax.core.dal.domain.*;
 import com.hj.jax.core.dal.manager.*;
 import com.hj.jax.core.service.WebService;
+import com.hj.jax.core.service.util.CalculateHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.HorizontalAlignment;
 import org.apache.poi.ss.usermodel.VerticalAlignment;
@@ -37,6 +38,8 @@ public class WebServiceImpl implements WebService {
     private static final DecimalFormat decimalFormat = new DecimalFormat("0.00"); //平均分保留两位小数点
 
     @Autowired
+    CalculateHelper calculateHelper;
+    @Autowired
     private CourseManager courseManager;
     @Autowired
     private UserCourseRefManager courseRefManager;
@@ -46,6 +49,9 @@ public class WebServiceImpl implements WebService {
     private MarkManager markManager;
     @Autowired
     private MarkEngineManager engineManager;
+    @Autowired
+    private TeacherCourseRefManager teacherCourseRefManager;
+
 
 
     @Override
@@ -176,10 +182,10 @@ public class WebServiceImpl implements WebService {
         userManager.getUserByUserIds(teacherIds).forEach(teacher -> {
 
             //该老师注册绑定的课程
-            List<Long> courseIds = courseRefManager.selectList(
-                    new EntityWrapper<UserCourseRef>()
-                            .eq("user_id", teacher.getUserId()))
-                    .stream().map(UserCourseRef::getCourseId).collect(Collectors.toList());
+            List<Long> courseIds = teacherCourseRefManager.selectList(
+                    new EntityWrapper<TeacherCourseRef>()
+                            .eq("teacher_id", teacher.getUserId()))
+                    .stream().map(TeacherCourseRef::getCourseId).collect(Collectors.toList());
 
             courseIds.forEach( courseId -> {
                 TeacherMarkVO teacherMarkVO = new TeacherMarkVO();
@@ -194,13 +200,13 @@ public class WebServiceImpl implements WebService {
                 List<Integer> expScore = markManager.getMarkByTeacherId(teacher.getUserId(),courseId, EXPERT_MARK.getCode());
 
                 teacherMarkVO.setStuMarkCount(stuScore.size());
-                teacherMarkVO.setStuMarkAverage(calculateArrangeScore((stuScore)));
+                teacherMarkVO.setStuMarkAverage(calculateHelper.calculateArrangeScore((stuScore)));
                 teacherMarkVO.setTeaMarkCount(stuScore.size());
-                teacherMarkVO.setTeaMarkAverage(calculateArrangeScore((teaScore)));
+                teacherMarkVO.setTeaMarkAverage(calculateHelper.calculateArrangeScore((teaScore)));
                 teacherMarkVO.setExpMarkCount(stuScore.size());
-                teacherMarkVO.setExpMarkAverage(calculateArrangeScore((expScore)));
+                teacherMarkVO.setExpMarkAverage(calculateHelper.calculateArrangeScore((expScore)));
 
-                teacherMarkVO.setFinalAverage(calculateFinalScore(
+                teacherMarkVO.setFinalAverage(calculateHelper.calculateFinalScore(
                         teacherMarkVO.getStuMarkAverage(),
                         teacherMarkVO.getTeaMarkAverage(),
                         teacherMarkVO.getExpMarkAverage()));
@@ -214,54 +220,6 @@ public class WebServiceImpl implements WebService {
                 teacherMarkVOList.size(),
                 teacherMarkVOList);
     }
-
-    /**
-     * <p> 计算平均分 </p>
-     *
-     * @param scoreList
-     * @return Integer
-     * @author Wuer (wuer@maihaoche.com)
-     * @date 2019/4/29 10:45
-     * @since V1.0.0-SNAPSHOT
-     */
-    private String calculateArrangeScore(List<Integer> scoreList) {
-        Assert.notNull(scoreList, "calculateArrangeScore - 计算平均分的分数集合为空");
-        OptionalDouble score = scoreList.stream().mapToDouble(x -> x).average();
-        if (score.isPresent()) {
-            return decimalFormat.format(score.getAsDouble());
-        }
-        log.warn("calculateArrangeScore - 计算平均分的分数异常 -> 0.00");
-        return decimalFormat.format(score.orElse(0.00F));
-    }
-
-
-    /**
-     * <p> 根据权重和平均分，计算最终得分 </p>
-     *
-     * @return Integer
-     * @author Wuer (wuer@maihaoche.com)
-     * @date 2019/4/29 10:45
-     * @since V1.0.0-SNAPSHOT
-     */
-    private String calculateFinalScore(String stuScore, String teaScore, String expScore) {
-        Assert.notNull(stuScore, "calculateFinalScore - 计算最终得分的学生平均分为空");
-        Assert.notNull(teaScore, "calculateFinalScore - 计算最终得分的教师平均分为空");
-        Assert.notNull(expScore, "calculateFinalScore - 计算最终得分的专家平均分为空");
-        double stu, tea, exp;
-        stu = stuScore.isEmpty() ? 0F : Double.valueOf(stuScore);
-        tea = teaScore.isEmpty() ? 0F : Double.valueOf(teaScore);
-        exp = expScore.isEmpty() ? 0F : Double.valueOf(expScore);
-
-        MarkEngine engine = engineManager.getMarkEngine();
-        double stuWeight = (float) engine.getStudentWeight() / 100;
-        double teaWeight = (float) engine.getTeacherWeight() / 100;
-        double expWeight = (float) engine.getExpertWeight() / 100;
-
-        double finalScore = stu * stuWeight + tea * teaWeight + exp * expWeight;
-
-        return decimalFormat.format(finalScore);
-    }
-
     @Override
     public XSSFWorkbook getMarkReport(PageRequestDTO pageRequestDTO) {
         return createExcelInfo(getAllTeacherMark(pageRequestDTO).getPageData());
